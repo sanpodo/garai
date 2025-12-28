@@ -10,14 +10,12 @@
         body { background-color: #fff5f7; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Jua', sans-serif; overflow: hidden; }
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         
-        /* 입력창 구역 */
         .input-area { z-index: 10; background: white; padding: 20px; border-radius: 30px; box-shadow: 0 5px 15px rgba(255,182,193,0.3); margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
         .input-row { display: flex; gap: 10px; }
         input { font-family: 'Jua', sans-serif; border: 2px solid var(--primary-pink); padding: 10px 15px; border-radius: 25px; outline: none; }
         #imgUrlInput { width: 250px; }
         #msgInput { width: 335px; }
 
-        /* 가챠 카드 */
         .gacha-container { position: relative; width: 280px; height: 400px; z-index: 5; perspective: 1000px; }
         .seal-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
         .is-shaking { animation: shake 0.2s infinite; }
@@ -118,7 +116,7 @@
 
         document.getElementById('shareBtn').addEventListener('click', () => {
             if (!photo.src) return;
-            const baseUrl = window.location.href.split('?')[0];
+            const baseUrl = window.location.origin + window.location.pathname;
             let finalLink = baseUrl + "?img=" + encodeURIComponent(photo.src);
             if (letter.innerText) finalLink += "&msg=" + encodeURIComponent(letter.innerText);
             
@@ -137,7 +135,8 @@
             sealCard.classList.add('is-shaking');
             
             setTimeout(() => {
-                popSound.play(); // 효과음 재생
+                // 효과음 재생 시도
+                popSound.play().catch(e => console.log("자동 재생이 차단되었습니다.")); 
                 sealCard.classList.remove('is-shaking');
                 sealCard.classList.add('is-flipped');
                 isOpened = true;
@@ -146,7 +145,6 @@
             }, 1200);
         });
 
-        // --- 애니메이션 로직 ---
         window.addEventListener('mousemove', (e) => {
             if (isOpened && Math.random() > 0.8) {
                 hearts.push({ x: e.clientX, y: e.clientY, size: Math.random() * 10 + 15, speedX: (Math.random() - 0.5) * 3, speedY: (Math.random() - 0.5) * 3, opacity: 1, color: `hsl(${Math.random() * 30 + 335}, 100%, 85%)` });
