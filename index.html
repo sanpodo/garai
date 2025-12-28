@@ -7,39 +7,50 @@
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
         :root { --primary-pink: #ffb6c1; --dark-pink: #ff85a2; }
-        body { 
-            background-color: #fff5f7; margin: 0; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            min-height: 100vh; font-family: 'Jua', sans-serif; overflow: hidden; 
-        }
+        body { background-color: #fff5f7; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Jua', sans-serif; overflow: hidden; }
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-        .input-area { z-index: 10; background: white; padding: 20px; border-radius: 50px; box-shadow: 0 5px 15px rgba(255,182,193,0.3); margin-bottom: 20px; display: flex; gap: 10px; }
-        input[type="text"] { font-family: 'Jua', sans-serif; border: 2px solid var(--primary-pink); padding: 10px 15px; border-radius: 25px; width: 250px; outline: none; }
-        .gacha-container { position: relative; width: 260px; height: 380px; z-index: 5; perspective: 1000px; }
+        
+        /* 입력창 구역 */
+        .input-area { z-index: 10; background: white; padding: 20px; border-radius: 30px; box-shadow: 0 5px 15px rgba(255,182,193,0.3); margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        .input-row { display: flex; gap: 10px; }
+        input { font-family: 'Jua', sans-serif; border: 2px solid var(--primary-pink); padding: 10px 15px; border-radius: 25px; outline: none; }
+        #imgUrlInput { width: 250px; }
+        #msgInput { width: 335px; }
+
+        /* 가챠 카드 */
+        .gacha-container { position: relative; width: 280px; height: 400px; z-index: 5; perspective: 1000px; }
         .seal-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
         .is-shaking { animation: shake 0.2s infinite; }
         .is-flipped { transform: rotateY(180deg); }
-        @keyframes shake { 0% { transform: rotate(0); } 25% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0); } }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; border: 8px solid white; box-shadow: 0 15px 35px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
-        .front { background: linear-gradient(135deg, #ffdee9 0%, #b5fffc 100%); color: white; font-size: 80px; }
-        .back { background: white; transform: rotateY(180deg); overflow: hidden; }
-        #photo { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+        
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; border: 8px solid white; box-shadow: 0 15px 35px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; box-sizing: border-box; overflow: hidden; }
+        .front { background: linear-gradient(135deg, #ffdee9 0%, #b5fffc 100%); color: white; font-size: 80px; justify-content: center; }
+        .back { background: white; transform: rotateY(180deg); }
+        
+        #photo { width: 100%; height: 70%; object-fit: cover; border-bottom: 4px solid #fff5f7; }
+        #letter { width: 100%; height: 30%; padding: 10px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; text-align: center; color: #555; font-size: 16px; word-break: keep-all; background: #fff; }
+
         .floating { animation: float 3s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+        
         h1 { color: var(--dark-pink); text-shadow: 1px 1px 0px white; z-index: 10; margin: 20px 0; font-size: 36px; }
-        .btn-group { display: none; gap: 10px; margin-top: 25px; z-index: 10; }
-        button { font-family: 'Jua', sans-serif; background: var(--primary-pink); color: white; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-group { display: none; gap: 10px; margin-top: 15px; z-index: 10; }
+        button { font-family: 'Jua', sans-serif; background: var(--primary-pink); color: white; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: var(--dark-pink); transform: scale(1.05); }
     </style>
 </head>
 <body>
+    <audio id="popSound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
 
     <canvas id="confetti-canvas"></canvas>
-    
 
     <div class="input-area" id="inputBox">
-        <input type="text" id="imgUrlInput" placeholder="이미지 주소를 입력하세요">
-        <button id="applyBtn">적용</button>
+        <div class="input-row">
+            <input type="text" id="imgUrlInput" placeholder="이미지 주소를 입력하세요">
+            <button id="applyBtn">적용</button>
+        </div>
+        <input type="text" id="msgInput" placeholder="짧은 편지를 써보세요!">
     </div>
 
     <div class="gacha-container" id="gachaContainer">
@@ -47,6 +58,7 @@
             <div class="card-face front">?</div>
             <div class="card-face back">
                 <img id="photo" src="" alt="result">
+                <div id="letter"></div>
             </div>
         </div>
     </div>
@@ -60,35 +72,35 @@
 
     <script>
         const imgUrlInput = document.getElementById('imgUrlInput');
+        const msgInput = document.getElementById('msgInput');
         const applyBtn = document.getElementById('applyBtn');
         const photo = document.getElementById('photo');
+        const letter = document.getElementById('letter');
         const sealCard = document.getElementById('sealCard');
         const btnGroup = document.getElementById('btnGroup');
         const inputBox = document.getElementById('inputBox');
+        const popSound = document.getElementById('popSound');
         const canvas = document.getElementById('confetti-canvas');
         const ctx = canvas.getContext('2d');
+        
+        let hearts = [], backgroundHearts = [], isOpened = false;
 
-        let hearts = [];
-        let backgroundHearts = [];
-        let isOpened = false;
-
-        // 하트 그리기 (대칭 최적화)
         function drawHeartShape(x, y, s) {
-            ctx.beginPath();
-            ctx.moveTo(x, y + s * 0.35);
+            ctx.beginPath(); ctx.moveTo(x, y + s * 0.35);
             ctx.bezierCurveTo(x, y, x - s * 0.7, y, x - s * 0.7, y + s * 0.45);
             ctx.bezierCurveTo(x - s * 0.7, y + s * 0.8, x, y + s * 1.1, x, y + s * 1.3);
             ctx.bezierCurveTo(x, y + s * 1.1, x + s * 0.7, y + s * 0.8, x + s * 0.7, y + s * 0.45);
-            ctx.bezierCurveTo(x + s * 0.7, y, x, y, x, y + s * 0.35);
-            ctx.fill();
+            ctx.bezierCurveTo(x + s * 0.7, y, x, y, x, y + s * 0.35); ctx.fill();
         }
 
-        // 주소창에서 이미지 정보 가져오기
         function init() {
             const urlParams = new URLSearchParams(window.location.search);
             const imgParam = urlParams.get('img');
+            const msgParam = urlParams.get('msg');
+            
             if (imgParam) {
                 photo.src = decodeURIComponent(imgParam);
+                if (msgParam) letter.innerText = decodeURIComponent(msgParam);
                 inputBox.style.display = 'none';
                 btnGroup.style.display = 'flex';
             }
@@ -96,28 +108,26 @@
 
         applyBtn.addEventListener('click', () => {
             const url = imgUrlInput.value.trim();
-            if (!url) return;
+            const msg = msgInput.value.trim();
+            if (!url) return alert("이미지 주소를 입력해주세요!");
             photo.src = url;
+            letter.innerText = msg;
             btnGroup.style.display = 'flex';
+            alert("이미지와 편지가 적용되었습니다!");
         });
 
-        // 링크 복사 기능 (현재 주소 + 이미지 파라미터)
         document.getElementById('shareBtn').addEventListener('click', () => {
-            if (!photo.src) return alert("이미지를 먼저 적용해주세요!");
+            if (!photo.src) return;
             const baseUrl = window.location.href.split('?')[0];
-            const finalLink = baseUrl + "?img=" + encodeURIComponent(photo.src);
+            let finalLink = baseUrl + "?img=" + encodeURIComponent(photo.src);
+            if (letter.innerText) finalLink += "&msg=" + encodeURIComponent(letter.innerText);
             
-            navigator.clipboard.writeText(finalLink).then(() => {
-                alert("링크가 복사되었습니다! 이 링크를 친구에게 보내세요.");
-            }).catch(() => {
-                const t = document.createElement("textarea");
-                document.body.appendChild(t); t.value = finalLink; t.select();
-                document.execCommand('copy'); document.body.removeChild(t);
-                alert("링크 복사 완료!");
-            });
+            const t = document.createElement("textarea");
+            document.body.appendChild(t); t.value = finalLink; t.select();
+            document.execCommand('copy'); document.body.removeChild(t);
+            alert("링크가 복사되었습니다! 🎉");
         });
 
-        // 원본 저장 기능 (새 탭에서 열기 - 가장 안전한 방식)
         document.getElementById('downloadBtn').addEventListener('click', () => {
             if (photo.src) window.open(photo.src, '_blank');
         });
@@ -125,7 +135,9 @@
         sealCard.addEventListener('click', () => {
             if (!photo.src || isOpened) return;
             sealCard.classList.add('is-shaking');
+            
             setTimeout(() => {
+                popSound.play(); // 효과음 재생
                 sealCard.classList.remove('is-shaking');
                 sealCard.classList.add('is-flipped');
                 isOpened = true;
@@ -134,27 +146,15 @@
             }, 1200);
         });
 
+        // --- 애니메이션 로직 ---
         window.addEventListener('mousemove', (e) => {
             if (isOpened && Math.random() > 0.8) {
-                hearts.push({
-                    x: e.clientX, y: e.clientY,
-                    size: Math.random() * 10 + 15,
-                    speedX: (Math.random() - 0.5) * 3,
-                    speedY: (Math.random() - 0.5) * 3,
-                    opacity: 1,
-                    color: `hsl(${Math.random() * 30 + 335}, 100%, 85%)`
-                });
+                hearts.push({ x: e.clientX, y: e.clientY, size: Math.random() * 10 + 15, speedX: (Math.random() - 0.5) * 3, speedY: (Math.random() - 0.5) * 3, opacity: 1, color: `hsl(${Math.random() * 30 + 335}, 100%, 85%)` });
             }
         });
 
         class BgHeart {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = canvas.height + 20;
-                this.size = Math.random() * 15 + 15;
-                this.speedY = -(Math.random() * 2 + 1);
-                this.opacity = 0.5;
-            }
+            constructor() { this.x = Math.random() * canvas.width; this.y = canvas.height + 20; this.size = Math.random() * 15 + 15; this.speedY = -(Math.random() * 2 + 1); this.opacity = 0.5; }
             update() { this.y += this.speedY; if (this.y < -40) this.y = canvas.height + 40; }
             draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = '#ffb6c1'; drawHeartShape(this.x, this.y, this.size); }
         }
@@ -162,18 +162,11 @@
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             backgroundHearts.forEach(h => { h.update(); h.draw(); });
-            hearts.forEach((h, i) => {
-                h.x += h.speedX; h.y += h.speedY; h.opacity -= 0.02;
-                ctx.globalAlpha = h.opacity; ctx.fillStyle = h.color;
-                drawHeartShape(h.x, h.y, h.size);
-                if (h.opacity <= 0) hearts.splice(i, 1);
-            });
+            hearts.forEach((h, i) => { h.x += h.speedX; h.y += h.speedY; h.opacity -= 0.02; ctx.globalAlpha = h.opacity; ctx.fillStyle = h.color; drawHeartShape(h.x, h.y, h.size); if (h.opacity <= 0) hearts.splice(i, 1); });
             requestAnimationFrame(render);
         }
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize);
-        resize(); render(); init();
+        window.addEventListener('resize', resize); resize(); render(); init();
     </script>
 </body>
-
 </html>
